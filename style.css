@@ -1,0 +1,353 @@
+:root {
+    --primary-color: #0c1a4b;
+    --accent-color: #ffcc00;
+    --text-color: #333;
+    --bg-color: #f4f7f6;
+    --card-border: #0c1a4b;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.app-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.app-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.app-header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.controls {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: flex-end;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    margin-bottom: 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.control-group input {
+    padding: 0.7rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s;
+}
+
+.control-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.primary-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+}
+
+.primary-btn:hover {
+    background: #1a2e7a;
+    transform: translateY(-2px);
+}
+
+.danger-btn {
+    background: transparent;
+    color: #c53030;
+    border: 2px solid #c53030;
+    padding: 0.9rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    font-size: 0.9rem;
+}
+
+.danger-btn:hover {
+    background: #c53030;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.actions {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Banner Layout */
+.banner-canvas {
+    background: #fff;
+    padding: 60px;
+    border: 15px solid var(--primary-color);
+    min-height: 800px;
+    width: fit-content;
+    min-width: 100%;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.banner-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 2300px;
+}
+
+.row-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 26px;
+}
+
+/* Per-row control bar */
+.row-ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(12, 26, 75, 0.06);
+    border: 1px solid rgba(12, 26, 75, 0.15);
+    border-radius: 8px;
+    padding: 4px 12px;
+    width: fit-content;
+    user-select: none;
+}
+
+.row-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.row-count-input {
+    width: 54px;
+    padding: 3px 6px;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    outline: none;
+    background: #fff;
+}
+
+.row-count-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.3);
+}
+
+.row-slots-label {
+    font-size: 11px;
+    color: #666;
+}
+
+.row-remove-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, transform 0.2s;
+    margin-left: 4px;
+}
+
+.row-remove-btn:hover {
+    background: #c53030;
+    transform: scale(1.15);
+}
+
+/* Hide controls during html2canvas capture */
+.capture-hidden {
+    display: none !important;
+}
+
+.banner-row {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    flex-wrap: nowrap;
+}
+
+/* Center only the top hero student */
+.row-hero {
+    justify-content: center;
+}
+
+/* Student Record Styling */
+.student-card {
+    width: 125px; /* Increased from 115px */
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 10px; /* Increased base size */
+    transition: transform 0.2s;
+}
+
+.student-card:hover {
+    transform: scale(1.05);
+}
+
+.photo-container {
+    width: 125px; /* Matches card width */
+    height: 155px; /* Proportionally adjusted */
+    border: 2.5px solid var(--card-border);
+    margin-bottom: 5px;
+    overflow: hidden;
+    background: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.photo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-container .placeholder-text {
+    font-size: 11px;
+    color: #999;
+}
+
+.student-info {
+    font-weight: bold;
+}
+
+.student-name {
+    display: block;
+    color: var(--primary-color);
+    font-size: 10.5px; /* Increased for better legibility */
+    text-transform: uppercase;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: visible;
+    letter-spacing: -0.4px; /* Slightly tighter to fit longer names at larger size */
+}
+
+.student-gpa {
+    display: block;
+    color: #555;
+    font-size: 9.5px; /* Increased */
+}
+
+/* Special sizing for Row 1 (Top Hero) - Slightly larger than standard */
+.row-hero .student-card {
+    width: 130px;
+}
+.row-hero .photo-container {
+    width: 130px;
+    height: 160px;
+}
+.row-hero .student-info .student-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.row-hero .student-info .student-gpa {
+    font-size: 11px;
+}
+
+/* Add Row button */
+.add-slot-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    padding-bottom: 8px;
+}
+
+.slot-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(12, 26, 75, 0.25);
+}
+
+.slot-add-btn:hover {
+    background: #1a2e7a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(12, 26, 75, 0.35);
+}
+
+.slot-add-icon {
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.slot-count-badge {
+    background: rgba(255, 204, 0, 0.85);
+    color: var(--primary-color);
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+@media print {
+    .controls, .app-header { display: none; }
+    .app-container { padding: 0; }
+    .banner-canvas { border: none; }
+}

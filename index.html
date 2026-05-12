@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Student Banner Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- SheetJS for Excel Support -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- html2canvas for Download Support -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Dynamic Achievement Banner</h1>
+            <p>Upload photos and CSV/Excel to generate your banner</p>
+        </header>
+
+        <section class="controls">
+            <div class="control-group">
+                <label for="fileInput">1. Upload Data (CSV/XLSX)</label>
+                <input type="file" id="fileInput" accept=".csv, .xlsx, .xls">
+            </div>
+            <div class="control-group">
+                <label for="imageInput">2. Upload Images (Multiple)</label>
+                <input type="file" id="imageInput" accept="image/*" multiple>
+            </div>
+            <div class="control-group actions">
+                <button id="downloadBtn" class="primary-btn">Download Banner</button>
+                <button id="clearSessionBtn" class="danger-btn">Clear Session</button>
+            </div>
+        </section>
+
+        <main class="banner-preview">
+            <div id="bannerContent" class="banner-canvas">
+                <!-- Grid will be generated here -->
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
