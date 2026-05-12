@@ -73,25 +73,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── 2. Bulk Image Upload (name-matched) ───────────────────────────────────
     imageInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
         let processed = 0, matchedCount = 0;
         const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-        const studentNameMap = studentData.map((s, idx) => ({ name: normalize(s.name), index: idx }));
+        
+        // Track which students in THIS upload batch get matched to avoid multiple files matching same student
+        // and to support matching duplicate student names with multiple files.
+        const matchedIndicesInBatch = new Set();
 
         files.forEach((file) => {
             const reader = new FileReader();
             reader.onload = (evt) => {
-                const normalizedFileName = normalize(file.name.split('.')[0]);
-                const match = studentNameMap.find(s =>
-                    s.name === normalizedFileName ||
-                    normalizedFileName.includes(s.name) ||
-                    s.name.includes(normalizedFileName)
+                const fileName = file.name.split('.')[0];
+                const normalizedFileName = normalize(fileName);
+                
+                // Priority 1: Exact Match (normalized)
+                let matchIndex = studentData.findIndex((s, idx) => 
+                    !matchedIndicesInBatch.has(idx) && normalize(s.name) === normalizedFileName
                 );
-                if (match) { imageMap.set(match.index, evt.target.result); matchedCount++; }
+
+                // Priority 2: Fuzzy Match (one contains the other)
+                if (matchIndex === -1) {
+                    matchIndex = studentData.findIndex((s, idx) => {
+                        if (matchedIndicesInBatch.has(idx)) return false;
+                        const sName = normalize(s.name);
+                        // Avoid matching empty names or very short names to everything
+                        if (sName.length < 2 || normalizedFileName.length < 2) return false;
+                        return normalizedFileName.includes(sName) || sName.includes(normalizedFileName);
+                    });
+                }
+
+                if (matchIndex !== -1) {
+                    imageMap.set(matchIndex, evt.target.result);
+                    matchedIndicesInBatch.add(matchIndex);
+                    matchedCount++;
+                }
+                
                 processed++;
                 if (processed === files.length) {
                     console.log(`Matched ${matchedCount}/${files.length} images.`);
                     saveSession();
                     renderGrid();
+                    // Clear input so same files can be re-uploaded if needed
+                    imageInput.value = '';
                 }
             };
             reader.readAsDataURL(file);
