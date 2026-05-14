@@ -17,11 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function saveSession() {
-        localStorage.setItem(KEYS.layout, JSON.stringify(gridLayout));
-        localStorage.setItem(KEYS.data,   JSON.stringify(studentData));
-        const imageObj = {};
-        imageMap.forEach((v, k) => { imageObj[k] = v; });
-        localStorage.setItem(KEYS.images, JSON.stringify(imageObj));
+        try {
+            localStorage.setItem(KEYS.layout, JSON.stringify(gridLayout));
+            localStorage.setItem(KEYS.data,   JSON.stringify(studentData));
+            const imageObj = {};
+            imageMap.forEach((v, k) => { imageObj[k] = v; });
+            localStorage.setItem(KEYS.images, JSON.stringify(imageObj));
+        } catch (e) {
+            console.warn("Storage full: Session data (images) might not persist after refresh.", e);
+        }
     }
 
     function loadSession() {
@@ -43,6 +47,57 @@ document.addEventListener('DOMContentLoaded', () => {
         imageMap    = new Map();
         fileInput.value  = '';
         imageInput.value = '';
+    }
+
+    async function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let quality = 0.7;
+                    const attemptCompression = (q) => {
+                        canvas.toBlob((blob) => {
+                            if (!blob || (blob.size < 100 * 1024) || q < 0.1) {
+                                const reader2 = new FileReader();
+                                reader2.onloadend = () => resolve(reader2.result);
+                                reader2.readAsDataURL(blob || file);
+                            } else {
+                                attemptCompression(q - 0.1);
+                            }
+                        }, 'image/jpeg', q);
+                    };
+                    attemptCompression(quality);
+                };
+                img.onerror = () => resolve(event.target.result);
+            };
+            reader.onerror = () => resolve(null);
+        });
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -71,25 +126,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── 2. Bulk Image Upload (name-matched) ───────────────────────────────────
-    imageInput.addEventListener('change', (e) => {
+    imageInput.addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
         let processed = 0, matchedCount = 0;
         const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-        
-        // Track which students in THIS upload batch get matched to avoid multiple files matching same student
-        // and to support matching duplicate student names with multiple files.
         const matchedIndicesInBatch = new Set();
 
-        files.forEach((file) => {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const fileName = file.name.split('.')[0];
-                const normalizedFileName = normalize(fileName);
-                
+        for (const file of files) {
+            const dataUrl = await compressImage(file);
+            if (!dataUrl) {
+                processed++;
+                continue;
+            }
+
+            const fileName = file.name.includes('.') 
+                ? file.name.substring(0, file.name.lastIndexOf('.')) 
+                : file.name;
+            const normalizedFileName = normalize(fileName);
+            
+            let matchIndex = -1;
+
+            if (studentData.length > 0) {
                 // Priority 1: Exact Match (normalized)
-                let matchIndex = studentData.findIndex((s, idx) => 
+                matchIndex = studentData.findIndex((s, idx) => 
                     !matchedIndicesInBatch.has(idx) && normalize(s.name) === normalizedFileName
                 );
 
@@ -98,29 +159,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     matchIndex = studentData.findIndex((s, idx) => {
                         if (matchedIndicesInBatch.has(idx)) return false;
                         const sName = normalize(s.name);
-                        // Avoid matching empty names or very short names to everything
                         if (sName.length < 2 || normalizedFileName.length < 2) return false;
                         return normalizedFileName.includes(sName) || sName.includes(normalizedFileName);
                     });
                 }
+            } else {
+                // Priority 3: Match against "Student X" placeholders if no CSV data
+                const totalSlots = gridLayout.reduce((a, b) => a + b, 0);
+                for (let i = 0; i < totalSlots; i++) {
+                    if (matchedIndicesInBatch.has(i)) continue;
+                    const placeholderName = normalize(`Student ${i + 1}`);
+                    if (normalizedFileName === placeholderName || normalizedFileName === `student${i + 1}`) {
+                        matchIndex = i;
+                        break;
+                    }
+                }
+            }
 
-                if (matchIndex !== -1) {
-                    imageMap.set(matchIndex, evt.target.result);
-                    matchedIndicesInBatch.add(matchIndex);
-                    matchedCount++;
-                }
-                
-                processed++;
-                if (processed === files.length) {
-                    console.log(`Matched ${matchedCount}/${files.length} images.`);
-                    saveSession();
-                    renderGrid();
-                    // Clear input so same files can be re-uploaded if needed
-                    imageInput.value = '';
-                }
-            };
-            reader.readAsDataURL(file);
-        });
+            if (matchIndex !== -1) {
+                imageMap.set(matchIndex, dataUrl);
+                matchedIndicesInBatch.add(matchIndex);
+                matchedCount++;
+            }
+            
+            processed++;
+            if (processed === files.length) {
+                console.log(`Matched ${matchedCount}/${files.length} images.`);
+                saveSession();
+                renderGrid();
+                imageInput.value = '';
+            }
+        }
     });
 
     // ── 3. Render Grid ────────────────────────────────────────────────────────
@@ -232,14 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const inp    = document.createElement('input');
             inp.type     = 'file';
             inp.accept   = 'image/*';
-            inp.onchange = (e) => {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    imageMap.set(index, evt.target.result);
+            inp.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const dataUrl = await compressImage(file);
+                if (dataUrl) {
+                    imageMap.set(index, dataUrl);
                     saveSession();
                     renderGrid();
-                };
-                reader.readAsDataURL(e.target.files[0]);
+                }
             };
             inp.click();
         });
